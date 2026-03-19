@@ -16,19 +16,21 @@ hours, do nothing and exit silently.
 
 ## Steps
 
-1. **Gather context** — Read recent conversations since last heartbeat
-2. **Check for updates:**
+1. **Read current user** — `collalog/me.md` for the @Shortcut to use in log entries (if missing, use @Agent)
+2. **Gather context** — Read recent conversations since last heartbeat
+3. **Check for updates:**
    - New tasks mentioned? -> Add to `collalog/tasks.md` + log entry [task]
    - Decisions made? -> Log entry [decision]
    - Files changed? -> Log entry [change]
    - New information? -> Log entry [note] and optionally update `collalog/memory.md`
-3. **Update the log** — Add entries to `collalog/log.md` (newest first)
-4. **Commit** — If files changed, commit to git (skill: git)
-5. **Notify** — Only message the team if something requires their attention
+4. **Update the log** — Add entries to `collalog/log.md` (newest first)
+5. **Commit** — If files changed, commit to git (skill: git)
+6. **Notify** — Only message the team if something requires their attention
    - Do NOT send "nothing to report" messages
 
 ## Files
 
+- Me: `collalog/me.md` (current user identity, local)
 - Log: `collalog/log.md`
 - Tasks: `collalog/tasks.md`
 - Project: `collalog/project.md` (for team info + schedule)

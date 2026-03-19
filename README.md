@@ -18,6 +18,7 @@ Every project event — a decision made, a task created, an idea proposed, a fil
 collalog/log.md         ← the source of truth (all events, newest first)
 collalog/tasks.md       ← snapshot: what's open, who owns it
 collalog/project.md     ← project description, team, config
+collalog/me.md          ← who am I? (local, gitignored)
 collalog/memory.md      ← optional: condensed project context
 ```
 
@@ -55,7 +56,7 @@ Run the setup command inside your AI agent:
 /collalog:setup
 ```
 
-The agent will ask about your project name, team members, technologies, and communication platform. For existing projects, it can import history from git log and project files.
+The agent will ask about your project name, team members, technologies, and communication platform. It also creates a local `collalog/me.md` to identify you (gitignored — not shared). For existing projects, it can import history from git log and project files.
 
 Or use the CLI fallback: `collalog setup`
 
@@ -122,6 +123,7 @@ my-project/
 │   ├── log.md                       #   Unified log (source of truth)
 │   ├── tasks.md                     #   Task snapshot
 │   ├── project.md                   #   Project description + team
+│   ├── me.md                        #   Current user identity (local, gitignored)
 │   └── memory.md                    #   Optional memory snapshot
 ├── .claude/commands/                # Commands (Claude Code example)
 │   ├── collalog.setup.md

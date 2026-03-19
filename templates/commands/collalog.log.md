@@ -14,19 +14,20 @@ The user tells you what to log. You create a properly formatted entry.
 
 ## Steps
 
-1. Parse what the user said
-2. Determine the entry type:
+1. Read `collalog/me.md` to get the current user's @Shortcut for the log entry header
+2. Parse what the user said
+3. Determine the entry type:
    - [decision] — "we decided", "agreed on", "chose"
    - [task] — "need to", "should", "todo", "add task"
    - [idea] — "idea:", "what if", "consider", "maybe we should"
    - [change] — "finished", "updated", "created", "fixed", "added"
    - [note] — anything else worth recording
    - [milestone] — "launched", "completed phase", "released"
-3. Ask for clarification only if truly ambiguous
-4. Write the entry to the TOP of `collalog/log.md` (newest first)
-5. If it's a [task]: also add to `collalog/tasks.md` with `created: YYYY-MM-DD HH:MM`
-6. If it's a [decision]: note alternatives if the user mentioned them
-7. Commit with the entry type: `<type>: <title>`
+4. Ask for clarification only if truly ambiguous
+5. Write the entry to the TOP of `collalog/log.md` (newest first)
+6. If it's a [task]: also add to `collalog/tasks.md` with `created: YYYY-MM-DD HH:MM`
+7. If it's a [decision]: note alternatives if the user mentioned them
+8. Commit with the entry type: `<type>: <title>`
 
 ## Entry Format
 

@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-VERSION="0.4.0"
+VERSION="0.5.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TEMPLATES_DIR="$ROOT_DIR/templates"
@@ -176,11 +176,12 @@ cmd_init() {
   cp "$TEMPLATES_DIR/prompts"/*.md "$target/.collalog/templates/prompts/" 2>/dev/null || true
   info "  + .collalog/templates/ (originals for sync)"
 
-  # Create collalog data files from templates
+  # Create collalog data files from templates (skip me.md — it's local-only, created during setup)
   log "Creating collalog files..."
   for tmpl in "$TEMPLATES_DIR/collalog"/*.md; do
     [[ -f "$tmpl" ]] || continue
     local name=$(basename "$tmpl")
+    [[ "$name" == "me.md" ]] && continue
     if [[ ! -f "$target/collalog/$name" ]]; then
       cp "$tmpl" "$target/collalog/$name"
       info "  + collalog/$name"
@@ -188,6 +189,22 @@ cmd_init() {
       warn "  ~ collalog/$name (exists, skipped)"
     fi
   done
+
+  # Create .gitignore with local-only files
+  local gitignore="$target/.gitignore"
+  local me_entry="collalog/me.md"
+  if [[ ! -f "$gitignore" ]]; then
+    cat > "$gitignore" <<GITIGNORE
+# collalog — local-only files (not shared via git)
+collalog/me.md
+GITIGNORE
+    info "  + .gitignore (with collalog/me.md)"
+  elif ! grep -qF "$me_entry" "$gitignore"; then
+    echo "" >> "$gitignore"
+    echo "# collalog — local-only files" >> "$gitignore"
+    echo "collalog/me.md" >> "$gitignore"
+    info "  ~ .gitignore (added collalog/me.md)"
+  fi
 
   # Copy CLAUDE.md template
   if [[ ! -f "$target/CLAUDE.md" ]]; then
@@ -272,6 +289,13 @@ cmd_setup() {
   read -rp "Communication platform (e.g., Slack, WhatsApp, Teams): " comm_platform
 
   echo ""
+  info "Your Identity (for collalog/me.md — local, gitignored)"
+  read -rp "  Your first name: " me_first
+  read -rp "  Your last name: " me_last
+  read -rp "  Your email: " me_email
+  read -rp "  Your shortcut (e.g., @SG): " me_shortcut
+
+  echo ""
   log "Generating project configuration..."
 
   local agent=$(grep '^agent:' ".collalog/config.yaml" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
@@ -312,6 +336,24 @@ YAML
   generate_claude_md "$config" "CLAUDE.md"
   generate_project_md "$config" "collalog/project.md"
   generate_tasks "$config" "collalog/tasks.md"
+
+  # Generate me.md (local, gitignored)
+  if [[ -n "$me_first" || -n "$me_shortcut" ]]; then
+    cat > "collalog/me.md" <<ME_INNER
+# Me
+
+> This file identifies the current user. It is local and gitignored.
+> Must match a team member in project.md.
+
+| Field | Value |
+|-------|-------|
+| First name | ${me_first} |
+| Last name | ${me_last} |
+| Email | ${me_email} |
+| Shortcut | ${me_shortcut} |
+ME_INNER
+    info "  + collalog/me.md (local identity)"
+  fi
 
   echo ""
   log "Setup complete! Your project '${project_name}' is ready."

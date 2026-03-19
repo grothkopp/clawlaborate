@@ -48,6 +48,12 @@ CLAUDE_INNER
 
   cat >> "$output" << CLAUDE_INNER
 
+## Current User
+
+Read \`collalog/me.md\` for the current user's identity (name, shortcut, email).
+Use the shortcut for log entries and task ownership. This file is local and gitignored.
+If it doesn't exist, ask the user to run \`/collalog:setup\` or use \`@Agent\`.
+
 ## Unified Log
 
 The central project log lives at \`collalog/log.md\`. Every meaningful event
@@ -90,6 +96,7 @@ collalog/
   log.md               Unified project log (source of truth)
   tasks.md             Task snapshot
   project.md           Project description, team
+  me.md                Current user identity (local, gitignored)
   memory.md            Optional memory snapshot
 ${commands_dir:-".claude/commands"}/
   collalog.*.md        Commands (user invokes these)

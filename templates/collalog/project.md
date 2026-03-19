@@ -12,6 +12,8 @@ _What is this project about?_
 |------|----------|------|
 | | | |
 
+> Each team member's local identity is in `collalog/me.md` (gitignored).
+
 ## Technologies
 
 _Key technologies used_

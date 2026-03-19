@@ -28,10 +28,16 @@ Description of what happened, was decided, or changed.
 ---
 ```
 
+## Current User
+
+Read `collalog/me.md` to determine the `@Shortcut` for log entries. If the file
+doesn't exist (shared agent or not yet set up), use `@Agent` as the shortcut.
+
 ## Rules
 
 - Newest entries at the top
 - Every log entry gets a git commit (use entry type as commit type)
+- The @Shortcut in the header comes from `collalog/me.md`
 - Be specific and factual — the log is the project's memory
 - Keep entries concise: 2-5 lines of description
 - Include enough context for someone reading in 3 months
