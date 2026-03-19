@@ -8,25 +8,36 @@ _Short project description_
 |------|----------|------|
 | | | |
 
-> Run `collalog setup` to configure this file.
+> Run `/collalog:setup` to configure this file.
 
 ## Unified Log
 
 The central project log lives at `collalog/log.md`. Every meaningful event
 (changes, decisions, tasks, ideas, notes, milestones) gets a log entry here.
-Newest entries first.
+Newest entries first. The task list and memory are snapshots derived from it.
+
+## Commands
+
+User-invokable commands (e.g., in Claude Code: `/project:collalog.setup`):
+
+| Command | Description |
+|---------|-------------|
+| /collalog:setup | One-time project setup wizard |
+| /collalog:log | Manually add a log entry |
+| /collalog:save | Save current work (log changes + commit) |
+| /collalog:status | Quick project overview |
 
 ## Skills
 
-Skills are installed in the agent-specific commands directory (e.g., `.claude/commands/`).
+Agent rules in `.collalog/skills/` (always active, not directly invoked):
 
 | Skill | Description |
 |-------|-------------|
-| log | Unified log format and entry types |
-| git | Version control conventions and commit format |
+| log-format | How to write log entries (types, format, rules) |
+| git | Commit conventions |
 | task-management | Task list as snapshot of the log |
 | memory | Optional project memory snapshot |
-| collalog-sync | Sync skills with collalog templates |
+| collalog-sync | Sync with collalog template repo |
 
 ## Prompts
 
@@ -41,15 +52,16 @@ Scheduled agent behaviors in `.collalog/prompts/`:
 
 ```
 collalog/
-  log.md               Unified project log (the source of truth)
+  log.md               Unified project log (source of truth)
   tasks.md             Task snapshot (derived from log)
   project.md           Project description, team, config
-  memory.md            Optional project memory snapshot
-.claude/commands/      Skills (agent reads these)
+  memory.md            Optional memory snapshot
+.claude/commands/      Commands (user invokes these)
 .collalog/
-  config.yaml          Configuration
-  prompts/             Scheduled agent behaviors
+  skills/              Agent rules (always active)
+  prompts/             Scheduled behaviors
   templates/           Original templates (for sync)
+  config.yaml          Configuration
 CLAUDE.md              This file
 ```
 

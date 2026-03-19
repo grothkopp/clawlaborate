@@ -1,33 +1,23 @@
-# Skill: Clawlaborate Sync
+# Skill: Collalog Sync
 
-Sync generic skills and prompts between this project and the collalog template repository.
+Rules for syncing skills, commands, and prompts with the collalog template repository.
 
-## When to Use
+## Upstream (project -> collalog repo)
 
-- After improving a skill or prompt that should benefit other projects
-- When updating to the latest collalog templates
-- During project review to check for upstream improvements
+When a command or skill has been improved and the improvement is generic:
+1. Run `collalog sync` to see diffs
+2. Copy improved files to the collalog repo's `templates/` directory
+3. Commit and push
 
-## Upstream (project -> collalog)
+## Downstream (collalog repo -> project)
 
-When a skill has been improved and the improvement is generic (not project-specific):
-
-1. Run `collalog sync` to see what differs from the templates
-2. Copy the improved version to the collalog repo's `templates/` directory
-3. Commit in collalog with message: `change: update <skill> from <project>`
-4. Push collalog changes
-
-## Downstream (collalog -> project)
-
-When collalog has new or updated templates:
-
-1. Run `collalog update` from the project root
-2. Review flagged differences with `collalog sync`
-3. Accept or merge changes manually
+When collalog has new templates:
+1. Run `collalog update` — installs new files, flags modified ones
+2. Run `collalog sync` — review diffs
+3. Accept or merge manually
 
 ## Rules
 
-- Never blindly overwrite project files — always review diffs
-- Project-specific customizations should be clearly marked with comments
-- If a skill needs project-specific behavior, extend it rather than modifying the generic version
-- Keep the generic version in collalog clean and universally applicable
+- Never blindly overwrite — always review diffs
+- Project-specific customizations should be clearly marked
+- Keep the generic version clean and universally applicable

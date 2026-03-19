@@ -17,8 +17,6 @@ get_team() {
     sed 's/.*name: "//;s/".*shortcut: "/ | /;s/".*role: "/ | /;s/".*//' || true
 }
 
-# ─── CLAUDE.md Generator ────────────────────────────────────────────────────
-
 generate_claude_md() {
   local config="$1" output="$2"
 
@@ -53,24 +51,32 @@ CLAUDE_INNER
 ## Unified Log
 
 The central project log lives at \`collalog/log.md\`. Every meaningful event
-(changes, decisions, tasks, ideas, notes, milestones) gets a log entry here.
-Newest entries first.
+gets a log entry here. Newest entries first.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| /collalog:setup | One-time project setup wizard |
+| /collalog:log | Manually add a log entry |
+| /collalog:save | Save current work (log changes + commit) |
+| /collalog:status | Quick project overview |
 
 ## Skills
 
-Skills are installed in \`${commands_dir:-".claude/commands"}/\`:
+Agent rules in \`.collalog/skills/\` (always active):
 
 | Skill | Description |
 |-------|-------------|
-| log | Unified log format and entry types |
-| git | Version control conventions and commit format |
+| log-format | Log entry types, format, rules |
+| git | Commit conventions |
 | task-management | Task list as snapshot of the log |
 | memory | Optional project memory snapshot |
-| collalog-sync | Sync skills with collalog templates |
+| collalog-sync | Sync with collalog template repo |
 
 ## Prompts
 
-Scheduled agent behaviors in \`.collalog/prompts/\`:
+Scheduled behaviors in \`.collalog/prompts/\`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
@@ -81,35 +87,33 @@ Scheduled agent behaviors in \`.collalog/prompts/\`:
 
 \`\`\`
 collalog/
-  log.md               Unified project log (the source of truth)
-  tasks.md             Task snapshot (derived from log)
-  project.md           Project description, team, config
-  memory.md            Optional project memory snapshot
+  log.md               Unified project log (source of truth)
+  tasks.md             Task snapshot
+  project.md           Project description, team
+  memory.md            Optional memory snapshot
 ${commands_dir:-".claude/commands"}/
-  collalog.*.md        Skills (agent reads these)
+  collalog.*.md        Commands (user invokes these)
 .collalog/
-  config.yaml          Configuration
-  prompts/             Scheduled agent behaviors
+  skills/              Agent rules (always active)
+  prompts/             Scheduled behaviors
   templates/           Original templates (for sync)
+  config.yaml          Configuration
 CLAUDE.md              This file
 \`\`\`
-
-## Communication
 CLAUDE_INNER
 
+  echo "" >> "$output"
+  echo "## Communication" >> "$output"
   if [[ -n "$comm" ]]; then
     echo "" >> "$output"
     echo "Primary channel: ${comm}" >> "$output"
   fi
-
   cat >> "$output" << 'CLAUDE_INNER'
 
-The agent communicates with the team through the configured messaging platform.
 All significant interactions should be logged in collalog/log.md.
 
 ## Formatting
 
-- Use proper Unicode characters where applicable
 - No emojis
 - Keep messages concise and actionable
 CLAUDE_INNER
@@ -125,8 +129,6 @@ CLAUDE_INNER
     echo "${tech}" >> "$output"
   fi
 }
-
-# ─── Collalog File Generators ────────────────────────────────────────────────
 
 generate_project_md() {
   local config="$1" output="$2"
@@ -177,7 +179,6 @@ generate_tasks() {
 
 ## Setup
 - [ ] Review and customize CLAUDE.md
-- [ ] Review agent skills
 - [ ] Set up heartbeat task (every 30 min)
 - [ ] Set up morning briefing task (daily 8:00)
 - [ ] Initial git commit
