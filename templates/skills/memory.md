@@ -1,6 +1,6 @@
 # Skill: Memory
 
-Maintain project knowledge in `agent/memory/`.
+Maintain project knowledge in `.clawlaborate/memory/`.
 
 ## Memory Files
 
@@ -16,6 +16,30 @@ Maintain project knowledge in `agent/memory/`.
 - New team member or external contact
 - A topic is added, refined, or completed
 - Status changes (phase transitions, milestones)
+
+## Example
+
+A `project.md` update after a milestone:
+
+```markdown
+## Status
+- Phase: Development (was: Setup)
+- Started: 2026-03-01
+- MVP target: 2026-05-15
+
+## Technologies
+TypeScript, React, PostgreSQL, Vercel
+```
+
+A `contacts.md` addition:
+
+```markdown
+## External Contacts
+
+| Name | Company | Role | Notes |
+|------|---------|------|-------|
+| Maria Schmidt | DesignCo | UX Designer | Freelance, available Tue+Thu |
+```
 
 ## Rules
 

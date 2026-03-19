@@ -22,6 +22,17 @@ Author: @<shortcut>
 | memory | Updated project memory or knowledge base |
 | org | Organizational changes (structure, config, setup) |
 
+## Example
+
+```
+decision: use PostgreSQL for primary database
+
+ADR-003. Chose PostgreSQL over MongoDB for relational data model
+and better tooling support. See .clawlaborate/logs/decisions.md.
+
+Author: @SG
+```
+
 ## Rules
 
 - Commit after every logical unit of change (not after every line)

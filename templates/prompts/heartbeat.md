@@ -11,14 +11,21 @@ Regular check-in to keep shared documents in sync with team activity.
 
 1. **Gather context** — Read recent conversations since last heartbeat
 2. **Check for updates:**
-   - New tasks mentioned? → Update task list (skill: task-management)
-   - Decisions made? → Log them (skill: decision-log)
-   - New project knowledge? → Update memory (skill: memory)
+   - New tasks mentioned? -> Update task list (skill: task-management)
+   - Decisions made? -> Log them (skill: decision-log)
+   - New project knowledge? -> Update memory (skill: memory)
 3. **Log changes** — If anything was updated, add changelog entries (skill: changelog)
 4. **Commit** — If files changed, commit to git (skill: git)
 5. **Notify** — Only message the team if something requires their attention
    - Do NOT send "nothing to report" messages
    - Do NOT repeat information the team already knows
+
+## File Locations
+
+- Tasks: `1 Project/tasks.md`
+- Decisions: `.clawlaborate/logs/decisions.md`
+- Changelog: `.clawlaborate/logs/changelog.md`
+- Memory: `.clawlaborate/memory/`
 
 ## Important
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # generate.sh — Template generation functions for clawlaborate
 
-# Parse YAML value (simple key: value extraction)
+# Parse YAML value (simple key: value extraction, indented)
 yaml_val() {
   local file="$1" key="$2"
   grep "^  $key:" "$file" 2>/dev/null | head -1 | sed 's/.*: "//' | tr -d '"' || echo ""
@@ -15,7 +15,6 @@ yaml_top_val() {
 # Extract team members from config
 get_team() {
   local file="$1"
-  # Parse team array entries
   grep -A2 '- name:' "$file" 2>/dev/null | paste -d'|' - - - | \
     sed 's/.*name: "//;s/".*shortcut: "/ | /;s/".*role: "/ | /;s/".*//' || true
 }
@@ -30,8 +29,9 @@ generate_claude_md() {
   local lang=$(yaml_val "$config" "language")
   local tech=$(yaml_val "$config" "technologies")
   local comm=$(yaml_val "$config" "communication")
+  local commands_dir=$(yaml_top_val "$config" "commands_dir")
 
-  cat > "$output" <<CLAUDE
+  cat > "$output" << CLAUDE_INNER
 # ${name}
 
 ${desc}
@@ -40,9 +40,8 @@ ${desc}
 
 | Name | Shortcut | Role |
 |------|----------|------|
-CLAUDE
+CLAUDE_INNER
 
-  # Add team members
   while IFS='|' read -r tname tshort trole; do
     [[ -z "$tname" ]] && continue
     tname=$(echo "$tname" | xargs)
@@ -51,58 +50,55 @@ CLAUDE
     echo "| ${tname} | ${tshort} | ${trole} |" >> "$output"
   done < <(get_team "$config")
 
-  cat >> "$output" <<'CLAUDE'
+  cat >> "$output" << CLAUDE_INNER
 
 ## Skills
 
-The agent uses skills defined in `agent/skills/`:
+The agent uses skills from \`${commands_dir:-".claude/commands"}/\`:
 
 | Skill | Description |
 |-------|-------------|
-| [git](agent/skills/git.md) | Version control conventions and commit format |
-| [changelog](agent/skills/changelog.md) | Document tracking and change logging |
-| [decision-log](agent/skills/decision-log.md) | Decision documentation and rationale |
-| [task-management](agent/skills/task-management.md) | Shared task list management |
-| [memory](agent/skills/memory.md) | Project knowledge and context maintenance |
+| git | Version control conventions and commit format |
+| changelog | Document tracking and change logging |
+| decision-log | Decision documentation with rationale (ADR-style) |
+| task-management | Shared task list management |
+| memory | Project knowledge and context maintenance |
 
 ## Prompts
 
-Scheduled agent behaviors in `agent/prompts/`:
+Scheduled agent behaviors in \`.clawlaborate/prompts/\`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
-| [heartbeat](agent/prompts/heartbeat.md) | Every 30 min | Monitor conversations, update tasks/decisions/memory |
-| [morning](agent/prompts/morning.md) | Daily 8:00 | Daily summary: tasks, changes, decisions |
+| heartbeat | Every 30 min | Monitor conversations, update tasks/decisions/memory |
+| morning | Daily 8:00 | Daily summary: tasks, changes, decisions |
 
 ## Workspace Structure
 
-```
-0 Inbox/              — Quick captures, unsorted
-1 Project/            — Tasks, planning
-CLAUDE
+\`\`\`
+.clawlaborate/
+  config.yaml          Project configuration
+  memory/              Project knowledge base
+  logs/                Changelog and decision log
+  prompts/             Scheduled agent behaviors
+  templates/           Original templates (for sync)
+${commands_dir:-".claude/commands"}/
+  clawbo.*.md          Skills (agent reads these)
+0 Inbox/               Quick captures, unsorted
+1 Project/             Tasks, planning
+CLAUDE.md              This file
+\`\`\`
+CLAUDE_INNER
 
-  # Add extra directories
-  local dir_num=2
-  local extra_dirs=$(yaml_val "$config" "directories" || echo "")
-
-  cat >> "$output" <<'CLAUDE'
-agent/
-  skills/             — Reusable agent instructions
-  prompts/            — Scheduled agent behaviors
-  memory/             — Project knowledge base
-  logs/               — Changelog and decision log
-CLAUDE.md             — This file
-```
-
-## Communication
-
-CLAUDE
+  echo "" >> "$output"
+  echo "## Communication" >> "$output"
+  echo "" >> "$output"
 
   if [[ -n "$comm" ]]; then
     echo "Primary channel: ${comm}" >> "$output"
   fi
 
-  cat >> "$output" <<'CLAUDE'
+  cat >> "$output" << 'CLAUDE_INNER'
 
 The agent communicates with the team through the configured messaging platform.
 When updating shared documents, always follow the changelog and git skills.
@@ -112,19 +108,17 @@ When updating shared documents, always follow the changelog and git skills.
 - Use proper Unicode characters where applicable
 - No emojis
 - Keep messages concise and actionable
-CLAUDE
+CLAUDE_INNER
 
   if [[ "$lang" == "de" ]]; then
     echo "- Use proper German Umlauts: ÄÖÜäöüß" >> "$output"
   fi
 
   if [[ -n "$tech" ]]; then
-    cat >> "$output" <<CLAUDE
-
-## Technologies
-
-${tech}
-CLAUDE
+    echo "" >> "$output"
+    echo "## Technologies" >> "$output"
+    echo "" >> "$output"
+    echo "${tech}" >> "$output"
   fi
 }
 
@@ -132,13 +126,12 @@ CLAUDE
 
 generate_project_memory() {
   local config="$1" output="$2"
-
   local name=$(yaml_val "$config" "name")
   local desc=$(yaml_val "$config" "description")
   local tech=$(yaml_val "$config" "technologies")
   local lang=$(yaml_val "$config" "language")
 
-  cat > "$output" <<MEM
+  cat > "$output" << MEM_INNER
 # Project: ${name}
 
 ## Vision
@@ -156,20 +149,20 @@ ${tech:-TBD}
 - Language: ${lang}
 
 ## Notes
-MEM
+MEM_INNER
 }
 
 generate_contacts_memory() {
   local config="$1" output="$2"
 
-  cat > "$output" <<MEM
+  cat > "$output" << 'MEM_INNER'
 # Contacts
 
 ## Team
 
 | Name | Shortcut | Role |
 |------|----------|------|
-MEM
+MEM_INNER
 
   while IFS='|' read -r tname tshort trole; do
     [[ -z "$tname" ]] && continue
@@ -179,18 +172,15 @@ MEM
     echo "| ${tname} | ${tshort} | ${trole} |" >> "$output"
   done < <(get_team "$config")
 
-  cat >> "$output" <<'MEM'
-
-## External Contacts
-MEM
+  echo "" >> "$output"
+  echo "## External Contacts" >> "$output"
 }
 
 generate_tasks() {
   local config="$1" output="$2"
-
   local name=$(yaml_val "$config" "name")
 
-  cat > "$output" <<TASKS
+  cat > "$output" << TASKS_INNER
 # Tasks — ${name}
 
 > Last updated: $(date +%Y-%m-%d)
@@ -198,6 +188,8 @@ generate_tasks() {
 ## Setup
 - [ ] Review and customize CLAUDE.md
 - [ ] Review agent skills and prompts
+- [ ] Set up heartbeat task (every 30 min)
+- [ ] Set up morning briefing task (daily 8:00)
 - [ ] Initial git commit
 
 ## Content
@@ -207,5 +199,5 @@ generate_tasks() {
 ## Organization
 
 ## Tech
-TASKS
+TASKS_INNER
 }

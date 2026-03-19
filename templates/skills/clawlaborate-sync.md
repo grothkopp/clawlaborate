@@ -8,22 +8,22 @@ Sync generic skills and prompts between this project and the clawlaborate templa
 - When updating to the latest clawlaborate templates
 - During project review to check for upstream improvements
 
-## Upstream (project → clawlaborate)
+## Upstream (project -> clawlaborate)
 
 When a skill or prompt has been improved in this project and the improvement is generic (not project-specific):
 
-1. Compare the project file with the template: `diff agent/skills/X.md <clawlaborate>/templates/skills/X.md`
-2. Copy the improved version to the clawlaborate repo
+1. Run `clawbo sync` to see what differs from the templates
+2. Copy the improved version to the clawlaborate repo's `templates/` directory
 3. Commit in clawlaborate with message: `content: update <skill> from <project>`
 4. Push clawlaborate changes
 
-## Downstream (clawlaborate → project)
+## Downstream (clawlaborate -> project)
 
 When clawlaborate has new or updated templates:
 
-1. Run `clawlabo update` from the project root
-2. Review flagged differences with `clawlabo sync`
-3. Accept or merge changes manually
+1. Run `clawbo update` from the project root
+2. Review flagged differences with `clawbo sync`
+3. New skills are installed automatically; modified files are flagged for review
 
 ## Rules
 

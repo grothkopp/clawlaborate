@@ -11,7 +11,7 @@ Start the day with a clear picture of what's happening and what needs attention.
 
 1. **Collect open tasks** — Read `1 Project/tasks.md`, group by owner
 2. **Check recent changes** — Run `git log --oneline --since="24 hours ago"`
-3. **Check recent decisions** — Read last 48h entries from `agent/logs/decisions.md`
+3. **Check recent decisions** — Read last 48h entries from `.clawlaborate/logs/decisions.md`
 4. **Send summary** to the team:
 
 ```

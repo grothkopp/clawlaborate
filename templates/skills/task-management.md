@@ -22,6 +22,19 @@ Organize tasks under headings:
 - **Organization** — Process, planning, coordination
 - **Tech** — Setup, tooling, infrastructure
 
+## Example
+
+```markdown
+## Content
+- [ ] Write project brief (@SG, due 2026-03-25)
+- [ ] Review competitor analysis (@NR)
+- [x] Create slide deck outline (@SG, completed 2026-03-19)
+
+## Tech
+- [ ] Set up CI/CD pipeline (@AP, blocked by: hosting decision)
+- [ ] Configure monitoring (@AP)
+```
+
 ## Rules
 
 - When a team member mentions a task, add it to the list with an owner
@@ -30,4 +43,5 @@ Organize tasks under headings:
 - Update the "Last updated" date whenever the file changes
 - If a task has no owner, assign it or flag it for discussion
 - Keep task descriptions actionable — start with a verb
+- Mark blocked tasks with `blocked by:` and what they depend on
 - Pair every task list change with a git commit (type: task)
