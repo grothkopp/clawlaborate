@@ -1,0 +1,55 @@
+# Project Name
+
+_Short project description_
+
+## Team
+
+| Name | Shortcut | Role |
+|------|----------|------|
+| | | |
+
+> Run `clawlabo setup` to configure this file.
+
+## Skills
+
+The agent uses skills defined in `agent/skills/`:
+
+| Skill | Description |
+|-------|-------------|
+| [git](agent/skills/git.md) | Version control conventions and commit format |
+| [changelog](agent/skills/changelog.md) | Document tracking and change logging |
+| [decision-log](agent/skills/decision-log.md) | Decision documentation and rationale |
+| [task-management](agent/skills/task-management.md) | Shared task list management |
+| [memory](agent/skills/memory.md) | Project knowledge and context maintenance |
+
+## Prompts
+
+Scheduled agent behaviors in `agent/prompts/`:
+
+| Prompt | Schedule | Description |
+|--------|----------|-------------|
+| [heartbeat](agent/prompts/heartbeat.md) | Every 30 min | Monitor conversations, update tasks/decisions/memory |
+| [morning](agent/prompts/morning.md) | Daily 8:00 | Daily summary: tasks, changes, decisions |
+
+## Workspace Structure
+
+```
+0 Inbox/              — Quick captures, unsorted
+1 Project/            — Tasks, planning
+agent/
+  skills/             — Reusable agent instructions
+  prompts/            — Scheduled agent behaviors
+  memory/             — Project knowledge base
+  logs/               — Changelog and decision log
+CLAUDE.md             — This file
+```
+
+## Communication
+
+The agent communicates with the team through the configured messaging platform.
+When updating shared documents, always follow the changelog and git skills.
+
+## Formatting
+
+- No emojis
+- Keep messages concise and actionable

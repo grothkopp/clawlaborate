@@ -1,0 +1,461 @@
+#!/usr/bin/env bash
+# clawlaborate - Collaborative AI agent setup for teams
+# Installs skills, prompts, and project structure for multi-person + agent collaboration
+# Inspired by speckit and openspec
+
+set -euo pipefail
+
+VERSION="0.1.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+TEMPLATES_DIR="$ROOT_DIR/templates"
+LIB_DIR="$ROOT_DIR/lib"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+log()   { echo -e "${GREEN}[clawlabo]${NC} $1"; }
+warn()  { echo -e "${YELLOW}[clawlabo]${NC} $1"; }
+error() { echo -e "${RED}[clawlabo]${NC} $1" >&2; }
+info()  { echo -e "${BLUE}[clawlabo]${NC} $1"; }
+
+usage() {
+  cat <<EOF
+clawlaborate v${VERSION} — Collaborative AI agent setup for teams
+
+Usage:
+  clawlabo init [path]         Initialize a new project with clawlaborate
+  clawlabo setup               Interactive project configuration
+  clawlabo update              Update skills/prompts from clawlaborate templates
+  clawlabo sync                Show diff between project and templates
+  clawlabo version             Show version
+
+Options:
+  --agent <type>    Agent type: claude (default), openclaw
+  --lang <lang>     Language for project files: en (default), de
+  --help            Show this help
+
+Examples:
+  clawlabo init .                    # Init in current directory
+  clawlabo init ./my-project         # Init in new directory
+  clawlabo setup                     # Interactive setup wizard
+  clawlabo update                    # Pull latest generic templates
+EOF
+}
+
+# ─── INIT ───────────────────────────────────────────────────────────────────
+
+cmd_init() {
+  local target="${1:-.}"
+  local agent="${AGENT:-claude}"
+  local lang="${LANG_OPT:-en}"
+
+  # Resolve target
+  if [[ ! -d "$target" ]]; then
+    mkdir -p "$target"
+    log "Created directory: $target"
+  fi
+  target="$(cd "$target" && pwd)"
+
+  log "Initializing clawlaborate in: $target"
+  log "Agent: $agent | Language: $lang"
+
+  # Create directory structure
+  local agent_dir="$target/agent"
+  mkdir -p "$agent_dir"/{skills,prompts,memory,logs}
+  mkdir -p "$target/.clawlaborate"
+
+  # Copy generic skills
+  log "Installing skills..."
+  for skill in "$TEMPLATES_DIR/skills"/*.md; do
+    [[ -f "$skill" ]] || continue
+    local name=$(basename "$skill")
+    if [[ ! -f "$agent_dir/skills/$name" ]]; then
+      cp "$skill" "$agent_dir/skills/$name"
+      info "  + skills/$name"
+    else
+      warn "  ~ skills/$name (exists, skipped)"
+    fi
+  done
+
+  # Copy generic prompts
+  log "Installing prompts..."
+  for prompt in "$TEMPLATES_DIR/prompts"/*.md; do
+    [[ -f "$prompt" ]] || continue
+    local name=$(basename "$prompt")
+    if [[ ! -f "$agent_dir/prompts/$name" ]]; then
+      cp "$prompt" "$agent_dir/prompts/$name"
+      info "  + prompts/$name"
+    else
+      warn "  ~ prompts/$name (exists, skipped)"
+    fi
+  done
+
+  # Copy memory templates
+  log "Installing memory templates..."
+  for mem in "$TEMPLATES_DIR/memory"/*.md; do
+    [[ -f "$mem" ]] || continue
+    local name=$(basename "$mem")
+    if [[ ! -f "$agent_dir/memory/$name" ]]; then
+      cp "$mem" "$agent_dir/memory/$name"
+      info "  + memory/$name"
+    else
+      warn "  ~ memory/$name (exists, skipped)"
+    fi
+  done
+
+  # Copy log templates
+  log "Installing log templates..."
+  for logf in "$TEMPLATES_DIR/logs"/*.md; do
+    [[ -f "$logf" ]] || continue
+    local name=$(basename "$logf")
+    if [[ ! -f "$agent_dir/logs/$name" ]]; then
+      cp "$logf" "$agent_dir/logs/$name"
+      info "  + logs/$name"
+    else
+      warn "  ~ logs/$name (exists, skipped)"
+    fi
+  done
+
+  # Create human-facing directories with defaults
+  for dir in "0 Inbox" "1 Project"; do
+    if [[ ! -d "$target/$dir" ]]; then
+      mkdir -p "$target/$dir"
+      info "  + $dir/"
+    fi
+  done
+
+  # Create tasks file
+  if [[ ! -f "$target/1 Project/tasks.md" ]]; then
+    cp "$TEMPLATES_DIR/tasks.md" "$target/1 Project/tasks.md" 2>/dev/null || \
+    cat > "$target/1 Project/tasks.md" <<'TASKS'
+# Tasks
+
+> Last updated: $(date +%Y-%m-%d)
+
+## Setup
+- [ ] Run `clawlabo setup` to configure project
+
+## Content
+
+## Research
+
+## Organization
+
+## Tech
+TASKS
+    info "  + 1 Project/tasks.md"
+  fi
+
+  # Copy CLAUDE.md template if no main prompt exists
+  if [[ ! -f "$target/CLAUDE.md" ]]; then
+    cp "$TEMPLATES_DIR/CLAUDE.md.template" "$target/CLAUDE.md"
+    info "  + CLAUDE.md (template — run 'clawlabo setup' to configure)"
+  else
+    warn "  ~ CLAUDE.md (exists, skipped)"
+  fi
+
+  # Write clawlaborate config
+  cat > "$target/.clawlaborate/config.yaml" <<YAML
+# clawlaborate configuration
+version: "${VERSION}"
+agent: "${agent}"
+language: "${lang}"
+initialized: "$(date -Iseconds)"
+template_source: "${ROOT_DIR}"
+
+# Project settings (populated by 'clawlabo setup')
+project:
+  name: ""
+  description: ""
+  team: []
+  directories: []
+YAML
+
+  # Agent-specific setup
+  case "$agent" in
+    claude)
+      # Create .claude directory if it doesn't exist
+      if [[ ! -d "$target/.claude" ]]; then
+        mkdir -p "$target/.claude"
+        info "  + .claude/"
+      fi
+      ;;
+    openclaw)
+      log "OpenClaw agent setup (skills will be read from agent/skills/)"
+      ;;
+  esac
+
+  echo ""
+  log "Done! Project initialized with clawlaborate."
+  log ""
+  log "Next steps:"
+  log "  1. cd $target"
+  log "  2. clawlabo setup    # Configure project details"
+  log "  3. Edit CLAUDE.md    # Customize main prompt"
+  echo ""
+}
+
+# ─── SETUP ──────────────────────────────────────────────────────────────────
+
+cmd_setup() {
+  local target="."
+
+  # Check if initialized
+  if [[ ! -d ".clawlaborate" ]]; then
+    error "Not a clawlaborate project. Run 'clawlabo init' first."
+    exit 1
+  fi
+
+  log "Project Setup Wizard"
+  echo ""
+
+  # Project name
+  read -rp "Project name: " project_name
+  [[ -z "$project_name" ]] && { error "Project name required."; exit 1; }
+
+  # Project description
+  read -rp "Short description (1 line): " project_desc
+
+  # Language
+  read -rp "Primary language [en]: " project_lang
+  project_lang="${project_lang:-en}"
+
+  # Team members
+  echo ""
+  info "Team Members (press Enter when done)"
+  local -a team_names=()
+  local -a team_shorts=()
+  local -a team_roles=()
+  local i=1
+  while true; do
+    read -rp "  Member $i name (or Enter to finish): " name
+    [[ -z "$name" ]] && break
+    read -rp "  Member $i shortcut (e.g., @SG): " shortcut
+    read -rp "  Member $i role: " role
+    team_names+=("$name")
+    team_shorts+=("$shortcut")
+    team_roles+=("$role")
+    ((i++))
+  done
+
+  # Additional directories
+  echo ""
+  read -rp "Additional directories (comma-separated, e.g., 'Research,Content'): " extra_dirs
+
+  # Technologies
+  read -rp "Key technologies (comma-separated): " tech_stack
+
+  # Communication platform
+  read -rp "Communication platform (e.g., Slack, WhatsApp, Teams): " comm_platform
+
+  echo ""
+  log "Generating project configuration..."
+
+  # Update config.yaml
+  local config=".clawlaborate/config.yaml"
+  cat > "$config" <<YAML
+# clawlaborate configuration
+version: "${VERSION}"
+agent: "$(grep 'agent:' "$config" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')"
+language: "${project_lang}"
+initialized: "$(grep 'initialized:' "$config" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || date -Iseconds)"
+configured: "$(date -Iseconds)"
+template_source: "$(grep 'template_source:' "$config" 2>/dev/null | head -1 | sed 's/.*: "//' | tr -d '"' || echo '')"
+
+project:
+  name: "${project_name}"
+  description: "${project_desc}"
+  language: "${project_lang}"
+  technologies: "${tech_stack}"
+  communication: "${comm_platform}"
+  team:
+YAML
+
+  for idx in "${!team_names[@]}"; do
+    cat >> "$config" <<YAML
+    - name: "${team_names[$idx]}"
+      shortcut: "${team_shorts[$idx]}"
+      role: "${team_roles[$idx]}"
+YAML
+  done
+
+  # Create additional directories
+  if [[ -n "$extra_dirs" ]]; then
+    local dir_num=2
+    IFS=',' read -ra DIRS <<< "$extra_dirs"
+    for dir in "${DIRS[@]}"; do
+      dir=$(echo "$dir" | xargs) # trim whitespace
+      local full_dir="$dir_num $dir"
+      if [[ ! -d "$full_dir" ]]; then
+        mkdir -p "$full_dir"
+        info "  + $full_dir/"
+      fi
+      ((dir_num++))
+    done
+  fi
+
+  # Generate CLAUDE.md from template
+  log "Generating CLAUDE.md..."
+  source "$LIB_DIR/generate.sh"
+  generate_claude_md "$config" "CLAUDE.md"
+
+  # Update memory files with project info
+  log "Updating memory files..."
+  generate_project_memory "$config" "agent/memory/project.md"
+  generate_contacts_memory "$config" "agent/memory/contacts.md"
+  generate_tasks "$config" "1 Project/tasks.md"
+
+  echo ""
+  log "Setup complete!"
+  log "Your project '${project_name}' is ready."
+  log ""
+  log "Files generated:"
+  log "  CLAUDE.md              — Main agent prompt"
+  log "  agent/memory/project.md — Project overview"
+  log "  agent/memory/contacts.md — Team directory"
+  log "  1 Project/tasks.md     — Task list"
+  log ""
+  log "Review and customize these files, then commit."
+}
+
+# ─── UPDATE ─────────────────────────────────────────────────────────────────
+
+cmd_update() {
+  if [[ ! -d ".clawlaborate" ]]; then
+    error "Not a clawlaborate project. Run 'clawlabo init' first."
+    exit 1
+  fi
+
+  local source
+  source=$(grep 'template_source:' .clawlaborate/config.yaml | sed 's/.*: "//' | tr -d '"')
+
+  if [[ -z "$source" || ! -d "$source" ]]; then
+    error "Template source not found. Set template_source in .clawlaborate/config.yaml"
+    exit 1
+  fi
+
+  log "Updating from: $source"
+
+  # Update skills (only if unchanged from template)
+  for skill in "$source/templates/skills"/*.md; do
+    [[ -f "$skill" ]] || continue
+    local name=$(basename "$skill")
+    local target="agent/skills/$name"
+
+    if [[ ! -f "$target" ]]; then
+      cp "$skill" "$target"
+      info "  + skills/$name (new)"
+    elif diff -q "$skill" "$target" > /dev/null 2>&1; then
+      info "  = skills/$name (unchanged)"
+    else
+      warn "  ~ skills/$name (differs — use 'clawlabo sync' to review)"
+    fi
+  done
+
+  # Update prompts
+  for prompt in "$source/templates/prompts"/*.md; do
+    [[ -f "$prompt" ]] || continue
+    local name=$(basename "$prompt")
+    local target="agent/prompts/$name"
+
+    if [[ ! -f "$target" ]]; then
+      cp "$prompt" "$target"
+      info "  + prompts/$name (new)"
+    elif diff -q "$prompt" "$target" > /dev/null 2>&1; then
+      info "  = prompts/$name (unchanged)"
+    else
+      warn "  ~ prompts/$name (differs — use 'clawlabo sync' to review)"
+    fi
+  done
+
+  log "Update complete."
+}
+
+# ─── SYNC ───────────────────────────────────────────────────────────────────
+
+cmd_sync() {
+  if [[ ! -d ".clawlaborate" ]]; then
+    error "Not a clawlaborate project."
+    exit 1
+  fi
+
+  local source
+  source=$(grep 'template_source:' .clawlaborate/config.yaml | sed 's/.*: "//' | tr -d '"')
+
+  if [[ -z "$source" || ! -d "$source" ]]; then
+    error "Template source not found."
+    exit 1
+  fi
+
+  log "Comparing project files with templates..."
+  echo ""
+
+  local has_diff=false
+
+  for dir in skills prompts; do
+    for file in "agent/$dir"/*.md; do
+      [[ -f "$file" ]] || continue
+      local name=$(basename "$file")
+      local template="$source/templates/$dir/$name"
+
+      if [[ ! -f "$template" ]]; then
+        info "  [project-only] $dir/$name"
+      elif diff -q "$template" "$file" > /dev/null 2>&1; then
+        : # identical, skip
+      else
+        warn "  [modified] $dir/$name"
+        diff --color=always -u "$template" "$file" | head -30
+        echo "  ..."
+        echo ""
+        has_diff=true
+      fi
+    done
+
+    # Check for new templates
+    for file in "$source/templates/$dir"/*.md; do
+      [[ -f "$file" ]] || continue
+      local name=$(basename "$file")
+      if [[ ! -f "agent/$dir/$name" ]]; then
+        info "  [new template] $dir/$name"
+        has_diff=true
+      fi
+    done
+  done
+
+  if [[ "$has_diff" == false ]]; then
+    log "Everything in sync."
+  fi
+}
+
+# ─── MAIN ───────────────────────────────────────────────────────────────────
+
+AGENT="claude"
+LANG_OPT="en"
+
+# Parse global options
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --agent)  AGENT="$2"; shift 2 ;;
+    --lang)   LANG_OPT="$2"; shift 2 ;;
+    --help)   usage; exit 0 ;;
+    *)        break ;;
+  esac
+done
+
+CMD="${1:-}"
+shift || true
+
+case "$CMD" in
+  init)     cmd_init "$@" ;;
+  setup)    cmd_setup "$@" ;;
+  update)   cmd_update "$@" ;;
+  sync)     cmd_sync "$@" ;;
+  version)  echo "clawlaborate v${VERSION}" ;;
+  "")       usage ;;
+  *)        error "Unknown command: $CMD"; usage; exit 1 ;;
+esac
