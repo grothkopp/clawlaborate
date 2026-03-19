@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# clawlaborate — Collaborative AI agent setup for teams
+# collalog — Collaborative AI agent setup for teams
 # Central unified log + skills for multi-person + agent collaboration
 # Inspired by speckit and openspec
 
@@ -37,7 +37,7 @@ declare -A AGENT_COMMANDS_DIR=(
   [opencode]=".opencode/command"
   [kiro]=".kiro/prompts"
   [amp]=".agents/commands"
-  [openclaw]=".clawlaborate/skills"
+  [openclaw]=".collalog/skills"
 )
 
 agent_skill_filename() {
@@ -51,14 +51,14 @@ agent_skill_filename() {
 
 get_commands_dir() {
   local agent="$1"
-  echo "${AGENT_COMMANDS_DIR[$agent]:-".clawlaborate/skills"}"
+  echo "${AGENT_COMMANDS_DIR[$agent]:-".collalog/skills"}"
 }
 
 # ─── USAGE ─────────────────────────────────────────────────────────────────
 
 usage() {
   cat <<EOF
-clawlaborate v${VERSION} — Collaborative AI agent setup for teams
+collalog v${VERSION} — Collaborative AI agent setup for teams
 
 Usage:
   collalog init [path]          Initialize a new project
@@ -116,7 +116,7 @@ cmd_init() {
 
   local commands_dir=$(get_commands_dir "$agent")
 
-  log "Initializing clawlaborate in: $target"
+  log "Initializing collalog in: $target"
   log "Agent: $agent | Commands: $commands_dir | Language: $lang"
   echo ""
 
@@ -124,9 +124,9 @@ cmd_init() {
   mkdir -p "$target/collalog"
   info "  + collalog/"
 
-  # Create .clawlaborate/ — fixed elements only (templates, prompts, config)
-  mkdir -p "$target/.clawlaborate"/{templates/skills,templates/prompts,prompts}
-  info "  + .clawlaborate/"
+  # Create .collalog/ — fixed elements only (templates, prompts, config)
+  mkdir -p "$target/.collalog"/{templates/skills,templates/prompts,prompts}
+  info "  + .collalog/"
 
   # Create agent-specific commands directory
   mkdir -p "$target/$commands_dir"
@@ -140,27 +140,27 @@ cmd_init() {
   done
 
   # Store original templates for update/sync
-  log "Storing templates in .clawlaborate/templates..."
+  log "Storing templates in .collalog/templates..."
   for skill in "$TEMPLATES_DIR/skills"/*.md; do
     [[ -f "$skill" ]] || continue
-    cp "$skill" "$target/.clawlaborate/templates/skills/"
+    cp "$skill" "$target/.collalog/templates/skills/"
   done
   for prompt in "$TEMPLATES_DIR/prompts"/*.md; do
     [[ -f "$prompt" ]] || continue
-    cp "$prompt" "$target/.clawlaborate/templates/prompts/"
+    cp "$prompt" "$target/.collalog/templates/prompts/"
   done
-  info "  + .clawlaborate/templates/ (originals for sync)"
+  info "  + .collalog/templates/ (originals for sync)"
 
-  # Install prompts → .clawlaborate/prompts/
+  # Install prompts → .collalog/prompts/
   log "Installing prompts..."
   for prompt in "$TEMPLATES_DIR/prompts"/*.md; do
     [[ -f "$prompt" ]] || continue
     local name=$(basename "$prompt")
-    if [[ ! -f "$target/.clawlaborate/prompts/$name" ]]; then
-      cp "$prompt" "$target/.clawlaborate/prompts/$name"
-      info "  + .clawlaborate/prompts/$name"
+    if [[ ! -f "$target/.collalog/prompts/$name" ]]; then
+      cp "$prompt" "$target/.collalog/prompts/$name"
+      info "  + .collalog/prompts/$name"
     else
-      warn "  ~ .clawlaborate/prompts/$name (exists, skipped)"
+      warn "  ~ .collalog/prompts/$name (exists, skipped)"
     fi
   done
 
@@ -186,8 +186,8 @@ cmd_init() {
   fi
 
   # Write config
-  cat > "$target/.clawlaborate/config.yaml" <<YAML
-# clawlaborate configuration
+  cat > "$target/.collalog/config.yaml" <<YAML
+# collalog configuration
 version: "${VERSION}"
 agent: "${agent}"
 commands_dir: "${commands_dir}"
@@ -203,12 +203,12 @@ project:
 YAML
 
   echo ""
-  log "Done! Project initialized with clawlaborate."
+  log "Done! Project initialized with collalog."
   echo ""
   log "Structure:"
   info "  collalog/               Log, tasks, project info (user-facing)"
   info "  $commands_dir/     Skills (agent reads these)"
-  info "  .clawlaborate/          Templates, prompts, config (fixed)"
+  info "  .collalog/          Templates, prompts, config (fixed)"
   info "  CLAUDE.md               Main agent prompt"
   echo ""
   log "Next steps:"
@@ -221,8 +221,8 @@ YAML
 # ─── SETUP ─────────────────────────────────────────────────────────────────
 
 cmd_setup() {
-  if [[ ! -d ".clawlaborate" ]]; then
-    error "Not a clawlaborate project. Run 'collalog init' first."
+  if [[ ! -d ".collalog" ]]; then
+    error "Not a collalog project. Run 'collalog init' first."
     exit 1
   fi
 
@@ -260,14 +260,14 @@ cmd_setup() {
   echo ""
   log "Generating project configuration..."
 
-  local agent=$(grep '^agent:' ".clawlaborate/config.yaml" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
-  local commands_dir=$(grep '^commands_dir:' ".clawlaborate/config.yaml" 2>/dev/null | head -1 | sed 's/^commands_dir: "//' | tr -d '"' || get_commands_dir "$agent")
-  local initialized=$(grep '^initialized:' ".clawlaborate/config.yaml" 2>/dev/null | head -1 | sed 's/^initialized: "//' | tr -d '"' || date -Iseconds)
-  local template_source=$(grep '^template_source:' ".clawlaborate/config.yaml" 2>/dev/null | head -1 | sed 's/^template_source: "//' | tr -d '"' || echo '')
+  local agent=$(grep '^agent:' ".collalog/config.yaml" 2>/dev/null | head -1 | awk '{print $2}' | tr -d '"' || echo 'claude')
+  local commands_dir=$(grep '^commands_dir:' ".collalog/config.yaml" 2>/dev/null | head -1 | sed 's/^commands_dir: "//' | tr -d '"' || get_commands_dir "$agent")
+  local initialized=$(grep '^initialized:' ".collalog/config.yaml" 2>/dev/null | head -1 | sed 's/^initialized: "//' | tr -d '"' || date -Iseconds)
+  local template_source=$(grep '^template_source:' ".collalog/config.yaml" 2>/dev/null | head -1 | sed 's/^template_source: "//' | tr -d '"' || echo '')
 
-  local config=".clawlaborate/config.yaml"
+  local config=".collalog/config.yaml"
   cat > "$config" <<YAML
-# clawlaborate configuration
+# collalog configuration
 version: "${VERSION}"
 agent: "${agent}"
 commands_dir: "${commands_dir}"
@@ -313,25 +313,25 @@ YAML
   log "Next steps:"
   log "  1. Review and customize CLAUDE.md"
   log "  2. Set up scheduled tasks:"
-  log "     - Heartbeat: every 30 min (see .clawlaborate/prompts/heartbeat.md)"
-  log "     - Morning briefing: daily at 8:00 (see .clawlaborate/prompts/morning.md)"
-  log "  3. git add -A && git commit -m 'org: initialize project with clawlaborate'"
+  log "     - Heartbeat: every 30 min (see .collalog/prompts/heartbeat.md)"
+  log "     - Morning briefing: daily at 8:00 (see .collalog/prompts/morning.md)"
+  log "  3. git add -A && git commit -m 'org: initialize project with collalog'"
 }
 
 # ─── UPDATE ────────────────────────────────────────────────────────────────
 
 cmd_update() {
-  if [[ ! -d ".clawlaborate" ]]; then
-    error "Not a clawlaborate project. Run 'collalog init' first."
+  if [[ ! -d ".collalog" ]]; then
+    error "Not a collalog project. Run 'collalog init' first."
     exit 1
   fi
 
-  local config=".clawlaborate/config.yaml"
+  local config=".collalog/config.yaml"
   local source
   source=$(grep 'template_source:' "$config" | sed 's/.*: "//' | tr -d '"')
 
   if [[ -z "$source" || ! -d "$source" ]]; then
-    error "Template source not found. Set template_source in .clawlaborate/config.yaml"
+    error "Template source not found. Set template_source in .collalog/config.yaml"
     exit 1
   fi
 
@@ -348,7 +348,7 @@ cmd_update() {
     local skill_name=$(basename "$skill" .md)
     local target_name=$(agent_skill_filename "$agent" "$skill_name")
     local target="$commands_dir/$target_name"
-    local stored=".clawlaborate/templates/skills/$(basename "$skill")"
+    local stored=".collalog/templates/skills/$(basename "$skill")"
 
     if [[ ! -f "$target" ]]; then
       cp "$skill" "$target"
@@ -365,12 +365,12 @@ cmd_update() {
   done
 
   echo ""
-  log "Prompts (.clawlaborate/prompts):"
+  log "Prompts (.collalog/prompts):"
   for prompt in "$source/templates/prompts"/*.md; do
     [[ -f "$prompt" ]] || continue
     local name=$(basename "$prompt")
-    local target=".clawlaborate/prompts/$name"
-    local stored=".clawlaborate/templates/prompts/$name"
+    local target=".collalog/prompts/$name"
+    local stored=".collalog/templates/prompts/$name"
 
     if [[ ! -f "$target" ]]; then
       cp "$prompt" "$target"
@@ -383,8 +383,8 @@ cmd_update() {
     fi
   done
 
-  cp "$source/templates/skills"/*.md ".clawlaborate/templates/skills/" 2>/dev/null || true
-  cp "$source/templates/prompts"/*.md ".clawlaborate/templates/prompts/" 2>/dev/null || true
+  cp "$source/templates/skills"/*.md ".collalog/templates/skills/" 2>/dev/null || true
+  cp "$source/templates/prompts"/*.md ".collalog/templates/prompts/" 2>/dev/null || true
 
   echo ""
   log "Update complete."
@@ -393,12 +393,12 @@ cmd_update() {
 # ─── SYNC ──────────────────────────────────────────────────────────────────
 
 cmd_sync() {
-  if [[ ! -d ".clawlaborate" ]]; then
-    error "Not a clawlaborate project."
+  if [[ ! -d ".collalog" ]]; then
+    error "Not a collalog project."
     exit 1
   fi
 
-  local config=".clawlaborate/config.yaml"
+  local config=".collalog/config.yaml"
   local source
   source=$(grep 'template_source:' "$config" | sed 's/.*: "//' | tr -d '"')
 
@@ -446,11 +446,11 @@ cmd_sync() {
   done
 
   echo ""
-  info "Prompts (.clawlaborate/prompts):"
+  info "Prompts (.collalog/prompts):"
   for prompt in "$source/templates/prompts"/*.md; do
     [[ -f "$prompt" ]] || continue
     local name=$(basename "$prompt")
-    local target=".clawlaborate/prompts/$name"
+    local target=".collalog/prompts/$name"
 
     if [[ ! -f "$target" ]]; then
       warn "  [missing] $name"
@@ -496,7 +496,7 @@ case "$CMD" in
   setup)    cmd_setup "$@" ;;
   update)   cmd_update "$@" ;;
   sync)     cmd_sync "$@" ;;
-  version)  echo "clawlaborate v${VERSION}" ;;
+  version)  echo "collalog v${VERSION}" ;;
   "")       usage ;;
   *)        error "Unknown command: $CMD"; usage; exit 1 ;;
 esac

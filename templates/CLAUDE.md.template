@@ -26,11 +26,11 @@ Skills are installed in the agent-specific commands directory (e.g., `.claude/co
 | git | Version control conventions and commit format |
 | task-management | Task list as snapshot of the log |
 | memory | Optional project memory snapshot |
-| clawlaborate-sync | Sync skills with clawlaborate templates |
+| collalog-sync | Sync skills with collalog templates |
 
 ## Prompts
 
-Scheduled agent behaviors in `.clawlaborate/prompts/`:
+Scheduled agent behaviors in `.collalog/prompts/`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
@@ -46,7 +46,7 @@ collalog/
   project.md           Project description, team, config
   memory.md            Optional project memory snapshot
 .claude/commands/      Skills (agent reads these)
-.clawlaborate/
+.collalog/
   config.yaml          Configuration
   prompts/             Scheduled agent behaviors
   templates/           Original templates (for sync)

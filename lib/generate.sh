@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# generate.sh — Template generation functions for clawlaborate
+# generate.sh — Template generation functions for collalog
 
 yaml_val() {
   local file="$1" key="$2"
@@ -66,11 +66,11 @@ Skills are installed in \`${commands_dir:-".claude/commands"}/\`:
 | git | Version control conventions and commit format |
 | task-management | Task list as snapshot of the log |
 | memory | Optional project memory snapshot |
-| clawlaborate-sync | Sync skills with clawlaborate templates |
+| collalog-sync | Sync skills with collalog templates |
 
 ## Prompts
 
-Scheduled agent behaviors in \`.clawlaborate/prompts/\`:
+Scheduled agent behaviors in \`.collalog/prompts/\`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
@@ -87,7 +87,7 @@ collalog/
   memory.md            Optional project memory snapshot
 ${commands_dir:-".claude/commands"}/
   collalog.*.md        Skills (agent reads these)
-.clawlaborate/
+.collalog/
   config.yaml          Configuration
   prompts/             Scheduled agent behaviors
   templates/           Original templates (for sync)

@@ -1,8 +1,8 @@
-# clawlaborate
+# collalog
 
 **Make collaboration part of your repo, not another tool.**
 
-clawlaborate adds structured collaboration to any project through your AI coding agent. Instead of switching between Slack, Jira, Notion, and your IDE, the agent tracks everything in a single unified log — decisions, tasks, changes, ideas — all in plain Markdown inside your git repository.
+collalog adds structured collaboration to any project through your AI coding agent. Instead of switching between Slack, Jira, Notion, and your IDE, the agent tracks everything in a single unified log — decisions, tasks, changes, ideas — all in plain Markdown inside your git repository.
 
 Every team member keeps using their preferred tool. The AI agent handles the overhead.
 
@@ -10,7 +10,7 @@ Every team member keeps using their preferred tool. The AI agent handles the ove
 
 Most collaboration overhead isn't the actual work — it's the meta-work: updating task boards, writing meeting notes, documenting decisions, keeping everyone informed.
 
-clawlaborate replaces all of that with one concept: a **unified log**.
+collalog replaces all of that with one concept: a **unified log**.
 
 Every project event — a decision made, a task created, an idea proposed, a file changed — becomes a log entry. The agent reads and writes this log automatically. Tasks and project memory are just snapshots derived from the log.
 
@@ -28,8 +28,8 @@ It works with any AI coding tool: Claude Code, Codex, Cursor, Gemini, Windsurf, 
 ### 1. Install
 
 ```bash
-git clone https://github.com/grothkopp/clawlaborate.git
-export PATH="$PATH:$(pwd)/clawlaborate/bin"
+git clone https://github.com/grothkopp/collalog.git
+export PATH="$PATH:$(pwd)/collalog/bin"
 ```
 
 ### 2. Initialize your project
@@ -46,7 +46,7 @@ collalog --agent cursor init .
 This creates:
 - `collalog/` with log, tasks, and project files
 - Skills in your agent's commands directory (e.g., `.claude/commands/collalog.*.md`)
-- `.clawlaborate/` with templates, prompts, and config
+- `.collalog/` with templates, prompts, and config
 - `CLAUDE.md` as the main agent prompt
 
 ### 3. Configure your project
@@ -61,13 +61,13 @@ The wizard asks for project name, description, team members (name + shortcut + r
 
 Configure these in your agent platform (Claude Code, OpenClaw, etc.):
 
-- **Heartbeat** (every 30 min): Agent monitors conversations, updates log and tasks. See `.clawlaborate/prompts/heartbeat.md`
-- **Morning briefing** (daily 8:00): Agent sends a summary of open tasks and recent activity. See `.clawlaborate/prompts/morning.md`
+- **Heartbeat** (every 30 min): Agent monitors conversations, updates log and tasks. See `.collalog/prompts/heartbeat.md`
+- **Morning briefing** (daily 8:00): Agent sends a summary of open tasks and recent activity. See `.collalog/prompts/morning.md`
 
 ### 5. Work
 
 ```bash
-git add -A && git commit -m "org: initialize project with clawlaborate"
+git add -A && git commit -m "org: initialize project with collalog"
 ```
 
 Start working. The agent will:
@@ -103,8 +103,8 @@ my-project/
 │   ├── collalog.git.md
 │   ├── collalog.task-management.md
 │   ├── collalog.memory.md
-│   └── collalog.clawlaborate-sync.md
-├── .clawlaborate/                   # Fixed elements (don't edit)
+│   └── collalog.collalog-sync.md
+├── .collalog/                   # Fixed elements (don't edit)
 │   ├── config.yaml                  #   Configuration
 │   ├── prompts/                     #   Scheduled agent behaviors
 │   └── templates/                   #   Original templates (for sync)
@@ -112,7 +112,7 @@ my-project/
 └── .gitignore
 ```
 
-**Convention:** `collalog/` is for humans and agents (read + write). `.clawlaborate/` is infrastructure (don't edit directly).
+**Convention:** `collalog/` is for humans and agents (read + write). `.collalog/` is infrastructure (don't edit directly).
 
 ## Supported Agents
 
@@ -129,7 +129,7 @@ my-project/
 | OpenCode | `.opencode/command/` | `collalog.*.md` |
 | Kiro CLI | `.kiro/prompts/` | `collalog.*.md` |
 | Amp | `.agents/commands/` | `collalog.*.md` |
-| OpenClaw | `.clawlaborate/skills/` | `collalog.*.md` |
+| OpenClaw | `.collalog/skills/` | `collalog.*.md` |
 
 ## Commands
 
