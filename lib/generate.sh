@@ -277,10 +277,10 @@ generate_tasks() {
 > Last updated: $(date +%Y-%m-%d)
 
 ## Setup
-- [ ] Review and customize CLAUDE.md (created: $(date '+%Y-%m-%d %H:%M'))
-- [ ] Review agent skills (created: $(date '+%Y-%m-%d %H:%M'))
-- [ ] Set up heartbeat task (created: $(date '+%Y-%m-%d %H:%M'))
-- [ ] Set up morning briefing task (created: $(date '+%Y-%m-%d %H:%M'))
+- [ ] Review and customize CLAUDE.md
+- [ ] Review agent skills
+- [ ] Set up heartbeat task
+- [ ] Set up morning briefing task
 
 ## Content
 
