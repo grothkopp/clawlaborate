@@ -174,7 +174,7 @@ upsert_colog_section() {
     # Simple approach: content before markers is preserved above, append section + remaining
     local before="${output}.before"
     local after="${output}.after"
-    sed -n '1,/<!-- colog:start -->/p' "$output" | head -n -1 > "$before"
+    sed -n '1,/<!-- colog:start -->/p' "$output" | sed '$d' > "$before"
     sed -n '/<!-- colog:end -->/,$p' "$output" | tail -n +2 > "$after"
     cat "$before" "$section_file" "$after" > "$output"
     rm -f "$before" "$after" "$tmp"

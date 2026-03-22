@@ -24,36 +24,40 @@ info()  { echo -e "${BLUE}[colog]${NC} $1"; }
 
 # ─── AGENT CONFIGURATIONS ─────────────────────────────────────────────────
 
-declare -A AGENT_COMMANDS_DIR=(
-  [claude]=".claude/commands"
-  [codex]=".codex/prompts"
-  [cursor]=".cursor/commands"
-  [gemini]=".gemini/commands"
-  [windsurf]=".windsurf/workflows"
-  [copilot]=".github/agents"
-  [kilo]=".kilocode/workflows"
-  [roo]=".roo/commands"
-  [opencode]=".opencode/command"
-  [kiro]=".kiro/prompts"
-  [amp]=".agents/commands"
-  [openclaw]=".colog/commands"
-)
+SUPPORTED_AGENTS="claude codex cursor gemini windsurf copilot kilo roo opencode kiro amp openclaw"
 
-# Agent prompt file — the main instructions file each tool reads
-declare -A AGENT_PROMPT_FILE=(
-  [claude]="CLAUDE.md"
-  [codex]="AGENTS.md"
-  [cursor]="AGENTS.md"
-  [gemini]="GEMINI.md"
-  [windsurf]="AGENTS.md"
-  [copilot]="AGENTS.md"
-  [kilo]="AGENTS.md"
-  [roo]="AGENTS.md"
-  [opencode]="AGENTS.md"
-  [kiro]="AGENTS.md"
-  [amp]="AGENTS.md"
-  [openclaw]="AGENTS.md"
-)
+get_commands_dir() {
+  case "$1" in
+    claude)   echo ".claude/commands" ;;
+    codex)    echo ".codex/prompts" ;;
+    cursor)   echo ".cursor/commands" ;;
+    gemini)   echo ".gemini/commands" ;;
+    windsurf) echo ".windsurf/workflows" ;;
+    copilot)  echo ".github/agents" ;;
+    kilo)     echo ".kilocode/workflows" ;;
+    roo)      echo ".roo/commands" ;;
+    opencode) echo ".opencode/command" ;;
+    kiro)     echo ".kiro/prompts" ;;
+    amp)      echo ".agents/commands" ;;
+    openclaw) echo ".colog/commands" ;;
+    *)        echo ".colog/commands" ;;
+  esac
+}
+
+is_supported_agent() {
+  case " $SUPPORTED_AGENTS " in
+    *" $1 "*) return 0 ;;
+    *)        return 1 ;;
+  esac
+}
+
+get_prompt_file() {
+  case "$1" in
+    claude)  echo "CLAUDE.md" ;;
+    gemini)  echo "GEMINI.md" ;;
+    *)       echo "AGENTS.md" ;;
+  esac
+}
 
 agent_command_filename() {
   local agent="$1" name="$2"
@@ -62,16 +66,6 @@ agent_command_filename() {
     gemini)  echo "${name}.toml" ;;
     *)       echo "${name}.md" ;;
   esac
-}
-
-get_commands_dir() {
-  local agent="$1"
-  echo "${AGENT_COMMANDS_DIR[$agent]:-".colog/commands"}"
-}
-
-get_prompt_file() {
-  local agent="$1"
-  echo "${AGENT_PROMPT_FILE[$agent]:-"AGENTS.md"}"
 }
 
 # ─── USAGE ─────────────────────────────────────────────────────────────────
@@ -272,9 +266,9 @@ cmd_init() {
   local agent="${AGENT:-claude}"
   local lang="${LANG_OPT:-en}"
 
-  if [[ -z "${AGENT_COMMANDS_DIR[$agent]+x}" ]]; then
+  if ! is_supported_agent "$agent"; then
     error "Unknown agent: $agent"
-    error "Supported: ${!AGENT_COMMANDS_DIR[*]}"
+    error "Supported: $SUPPORTED_AGENTS"
     exit 1
   fi
 
@@ -624,12 +618,14 @@ project:
   team:
 YAML
 
-  for idx in "${!team_names[@]}"; do
+  local idx=0
+  while [[ $idx -lt ${#team_names[@]} ]]; do
     cat >> "$config" <<YAML
     - name: "${team_names[$idx]}"
       shortcut: "${team_shorts[$idx]}"
       role: "${team_roles[$idx]}"
 YAML
+    idx=$((idx + 1))
   done
 
   local prompt_file=$(get_prompt_file "$agent")
