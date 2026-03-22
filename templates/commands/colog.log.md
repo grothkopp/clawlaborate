@@ -1,6 +1,8 @@
 # /colog:log — Log an Event
 
 Log a decision, task, idea, note, or change as a git commit.
+This is the single source of truth for creating semantic commits —
+other commands (`/colog:save`, `/colog:sync`) delegate here.
 
 ## Usage
 
@@ -28,25 +30,19 @@ The user tells you what to log. You create a properly formatted commit.
 5. Create the commit (always use `--author="First Last <email>"` from me.md):
    - **With related file changes**: stage files + `git commit --author="..." -m "type(subject): message @user"`
    - **Without file changes**: `git commit --allow-empty --author="..." -m "type(subject): message @user"`
-6. If it's a `task`: also add to `colog/tasks.md` with commit short ID, then commit tasks.md
-7. If it's a `decision`: include alternatives in the commit body if mentioned
+6. If it's a `task` (new): add to `colog/tasks.md` with commit short ID, then commit tasks.md
+7. If it's a `task` (completed, with `closes ID`): update tasks.md checkbox to `- [x]`, commit tasks.md
+8. If it's a `decision`: include alternatives in the commit body if mentioned
 
 ## Commit Format
 
-First line:
+Defined in the `git` skill. Summary:
+
 ```
 type(subject): short description @user
 ```
 
-Optional body (for decisions with context, detailed notes, etc.):
-```
-decision(db): use PostgreSQL for user data @SG
-
-Considered MongoDB and DynamoDB. PostgreSQL chosen for:
-- Better relational query support
-- Team familiarity
-- Lower operational complexity
-```
+Optional body for decisions with context, detailed notes, etc.
 
 ## Important
 
@@ -54,3 +50,4 @@ Considered MongoDB and DynamoDB. PostgreSQL chosen for:
 - If the user gives a one-liner, that's fine as the full commit message
 - Always confirm what was logged with a brief summary
 - Use empty commits freely — a question or idea without file changes is valid
+- This command owns all semantic commit creation — other commands call it, not the other way around

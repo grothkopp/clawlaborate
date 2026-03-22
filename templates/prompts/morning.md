@@ -13,13 +13,9 @@ This prompt is also a template — users can customize it for their own schedule
 
 1. **Sync first** — Run `/colog:sync` to pull latest changes and sync tasks
 2. **Clean up tasks** — Remove completed tasks (`- [x]`) from `colog/tasks.md`.
-   They are preserved in git history. Commit cleanup:
-   `change(tasks): morning cleanup - remove completed tasks @Agent`
-3. **Get status** — Run `/colog:status yesterday` to collect:
-   - Open tasks grouped by owner (current user first)
-   - Activity from the last 24 hours
-   - Uncommitted or unpushed work
-4. **Format the briefing** — Structure the output for the team:
+   They are preserved in git history. Use `/colog:save` to commit the cleanup.
+3. **Get status** — Run `/colog:status yesterday` to collect the daily overview
+4. **Format the briefing** — Structure the status output for the team:
 
 ```
 Good morning! Here's today's overview:
@@ -49,3 +45,4 @@ Unassigned: task5
 - Flag overdue or blocked tasks explicitly
 - Highlight the current user's tasks first
 - If everything is quiet, send a short "all clear" instead
+- Delegates to `/colog:sync`, `/colog:status`, and `/colog:save` — never duplicates their logic

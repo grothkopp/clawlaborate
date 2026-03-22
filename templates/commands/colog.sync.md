@@ -1,12 +1,11 @@
 # /colog:sync — Sync Repository and Tasks
 
-Pull latest changes, sync tasks between `colog/tasks.md` and git, and commit
-any pending events.
+Pull latest changes, sync tasks between `colog/tasks.md` and git, and push.
 
 ## Usage
 
 ```
-/colog:sync                     # Full sync: pull, tasks, events
+/colog:sync                     # Full sync: pull, tasks, push
 /colog:sync tasks               # Only sync tasks.md ↔ git
 /colog:sync pull                # Only pull from remote
 ```
@@ -14,7 +13,6 @@ any pending events.
 ## Steps
 
 1. **Read identity** — `colog/me.md` for @Shortcut, name, email.
-   Use `--author="First Last <email>"` on all commits.
 
 2. **Pull from remote** (unless `tasks` only):
    - Check if a remote exists: `git remote -v`
@@ -26,12 +24,13 @@ any pending events.
    **a) Detect manually completed tasks (tasks.md → git)**
    - Find tasks checked off (`- [x]`) that have no matching completion commit
    - Check: `git log --oneline --grep="closes COMMIT_ID"` — if no result, needs sync
-   - Create completion commit: `task(subject): completed - description (closes COMMIT_ID) @user`
+   - Use `/colog:log` to create the completion commit:
+     `task(subject): completed - description (closes COMMIT_ID) @user`
 
    **b) Detect manually added tasks (tasks.md → git)**
    - Find `- [ ]` lines without a 7-char hex commit reference
    - Deduplicate: search `git log --oneline --grep="task("` for matching description
-   - If genuinely new: `git commit --allow-empty --author="..." -m "task(subject): description @user"`
+   - If genuinely new: use `/colog:log` to create the task commit
    - Update the task line in tasks.md with the new commit's short ID
 
    **c) Detect untracked commits (git → tasks.md)**
@@ -53,6 +52,6 @@ any pending events.
 
 - This command is safe to run frequently — it's idempotent
 - Task sync is the core function; pull/push are convenience wrappers
+- Delegates to `/colog:log` for creating commits — never duplicates commit logic
 - Never auto-commit code changes — only task metadata and empty commits
 - The heartbeat calls this command automatically on schedule
-- Can also be invoked manually at any time
