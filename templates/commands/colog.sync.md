@@ -1,11 +1,13 @@
-# /colog:sync — Sync Repository and Tasks
+# /colog:sync — Sync Everything
 
-Pull latest changes, sync tasks between `colog/tasks.md` and git, and push.
+The central orchestrator. Pulls latest changes, detects and logs events from
+conversations, saves file changes, syncs tasks, and pushes. This is what the
+heartbeat calls on schedule — it handles the full sync cycle.
 
 ## Usage
 
 ```
-/colog:sync                     # Full sync: pull, tasks, push
+/colog:sync                     # Full sync cycle
 /colog:sync tasks               # Only sync tasks.md ↔ git
 /colog:sync pull                # Only pull from remote
 ```
@@ -19,13 +21,25 @@ Pull latest changes, sync tasks between `colog/tasks.md` and git, and push.
    - If yes: `git pull --rebase` to get latest changes
    - Handle conflicts if any (prefer theirs for tasks.md, ours for code)
 
-3. **Sync tasks** — Two-way sync between `colog/tasks.md` and git:
+3. **Detect and log events** (unless `tasks` or `pull` only):
+   - Read recent conversations/activity since last sync
+   - For each loggable event, use `/colog:log` to create the commit:
+     - New tasks mentioned → `/colog:log` (type: task)
+     - Decisions made → `/colog:log` (type: decision)
+     - Questions asked → `/colog:log` (type: note)
+     - New information → `/colog:log` (type: note), optionally update memory.md
+   - One commit per logical event — don't bundle unrelated things
+
+4. **Save file changes** (unless `tasks` or `pull` only):
+   - If there are uncommitted file changes, use `/colog:save` to commit them
+     with semantic messages
+
+5. **Sync tasks** — Two-way sync between `colog/tasks.md` and git:
 
    **a) Detect manually completed tasks (tasks.md → git)**
    - Find tasks checked off (`- [x]`) that have no matching completion commit
    - Check: `git log --oneline --grep="closes COMMIT_ID"` — if no result, needs sync
-   - Use `/colog:log` to create the completion commit:
-     `task(subject): completed - description (closes COMMIT_ID) @user`
+   - Use `/colog:log` to create the completion commit
 
    **b) Detect manually added tasks (tasks.md → git)**
    - Find `- [ ]` lines without a 7-char hex commit reference
@@ -41,17 +55,15 @@ Pull latest changes, sync tasks between `colog/tasks.md` and git, and push.
    **d) Commit sync changes**
    - If tasks.md was modified: `change(tasks): sync task status @user`
 
-4. **Check for uncommitted work** (unless `tasks` only):
-   - `git status` — if there are staged or modified files, notify the user
-   - Do NOT auto-commit code changes (that's what `/colog:save` is for)
-
-5. **Push to remote** (if remote exists and there are unpushed commits):
+6. **Push to remote** (if remote exists and there are unpushed commits):
    - `git push` to share changes
+
+7. **Notify** — Only message the team if something requires their attention.
+   Do NOT send "nothing to report" messages.
 
 ## Important
 
 - This command is safe to run frequently — it's idempotent
-- Task sync is the core function; pull/push are convenience wrappers
-- Delegates to `/colog:log` for creating commits — never duplicates commit logic
-- Never auto-commit code changes — only task metadata and empty commits
-- The heartbeat calls this command automatically on schedule
+- Delegates to `/colog:log` for all commit creation, `/colog:save` for file changes
+- The heartbeat is just a scheduled trigger for this command
+- Can also be invoked manually at any time

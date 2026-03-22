@@ -2,11 +2,14 @@
 
 Log a decision, task, idea, note, or change as a git commit.
 This is the single source of truth for creating semantic commits —
-other commands (`/colog:save`, `/colog:sync`) delegate here.
+`/colog:sync` and `/colog:save` delegate here.
+
+Normally, events are detected and logged automatically by `/colog:sync`
+(which reads conversations and creates commits). This command can also
+be invoked manually when you want to explicitly log something outside
+the regular sync cycle.
 
 ## Usage
-
-The user tells you what to log. You create a properly formatted commit.
 
 ```
 /colog:log We decided to use PostgreSQL instead of MongoDB
@@ -18,7 +21,7 @@ The user tells you what to log. You create a properly formatted commit.
 ## Steps
 
 1. Read `colog/me.md` for the current user's @Shortcut, First name, Last name, and Email
-2. Parse what the user said
+2. Parse the input (user message or event detected by `/colog:sync`)
 3. Determine the commit type:
    - `decision` — "we decided", "agreed on", "chose"
    - `task` — "need to", "should", "todo", "add task"
@@ -47,7 +50,5 @@ Optional body for decisions with context, detailed notes, etc.
 ## Important
 
 - Don't ask unnecessary questions — infer what you can
-- If the user gives a one-liner, that's fine as the full commit message
-- Always confirm what was logged with a brief summary
 - Use empty commits freely — a question or idea without file changes is valid
-- This command owns all semantic commit creation — other commands call it, not the other way around
+- This command owns all semantic commit creation — other commands call it

@@ -60,7 +60,7 @@ Scheduled agent behaviors in `.colog/prompts/`:
 
 | Prompt | Schedule | Description |
 |--------|----------|-------------|
-| heartbeat | Every 30 min | Runs /colog:sync, commits events from conversations |
+| heartbeat | Every 30 min | Scheduled trigger for /colog:sync |
 | morning | Daily 8:00 | Runs /colog:sync + /colog:status yesterday, sends daily briefing |
 
 ## Current User
