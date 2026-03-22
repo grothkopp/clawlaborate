@@ -85,6 +85,147 @@ Examples:
 EOF
 }
 
+# ─── AGENT PERMISSIONS ─────────────────────────────────────────────────────
+
+configure_agent_permissions() {
+  local target="$1" agent="$2"
+
+  case "$agent" in
+    claude)
+      # Claude Code: .claude/settings.json with allow/deny rules
+      local settings_file="$target/.claude/settings.json"
+      local colog_rules=(
+        'Bash(git status)'
+        'Bash(git log *)'
+        'Bash(git diff *)'
+        'Bash(git add *)'
+        'Bash(git commit *)'
+        'Bash(git fetch *)'
+        'Bash(git pull *)'
+        'Bash(git push)'
+        'Bash(git push *)'
+        'Bash(git branch *)'
+        'Bash(git checkout *)'
+        'Bash(git merge *)'
+        'Bash(git rebase *)'
+        'Bash(git rev-parse *)'
+        'Bash(git remote *)'
+        'Bash(git shortlog *)'
+        'Bash(git show *)'
+        'Bash(git stash *)'
+      )
+
+      mkdir -p "$target/.claude"
+
+      if [[ -f "$settings_file" ]]; then
+        # File exists — merge colog rules into existing allow list
+        local tmp_file="${settings_file}.tmp"
+        # Use a simple approach: read existing, add missing rules
+        local existing_content
+        existing_content=$(cat "$settings_file")
+
+        # Check if permissions.allow exists in the JSON
+        if echo "$existing_content" | grep -q '"allow"'; then
+          # Add rules that aren't already present
+          local added=0
+          for rule in "${colog_rules[@]}"; do
+            if ! echo "$existing_content" | grep -qF "\"$rule\""; then
+              ((added++))
+            fi
+          done
+          if [[ $added -gt 0 ]]; then
+            # Use python/node to safely merge JSON if available, otherwise
+            # use a simple sed approach for the common case
+            if command -v python3 &>/dev/null; then
+              python3 -c "
+import json, sys
+
+with open('$settings_file', 'r') as f:
+    data = json.load(f)
+
+if 'permissions' not in data:
+    data['permissions'] = {}
+if 'allow' not in data['permissions']:
+    data['permissions']['allow'] = []
+
+existing = set(data['permissions']['allow'])
+new_rules = $(printf '%s\n' "${colog_rules[@]}" | python3 -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin]))")
+
+for rule in new_rules:
+    if rule not in existing:
+        data['permissions']['allow'].append(rule)
+
+with open('$settings_file', 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+" 2>/dev/null && info "  ~ .claude/settings.json (added colog git permissions)" || \
+              warn "  ~ .claude/settings.json (exists, please add git permissions manually)"
+            else
+              warn "  ~ .claude/settings.json (exists, please add git permissions manually)"
+            fi
+          else
+            info "  = .claude/settings.json (git permissions already present)"
+          fi
+        else
+          # Has settings file but no allow section — add permissions
+          if command -v python3 &>/dev/null; then
+            python3 -c "
+import json
+
+with open('$settings_file', 'r') as f:
+    data = json.load(f)
+
+if 'permissions' not in data:
+    data['permissions'] = {}
+
+data['permissions']['allow'] = data['permissions'].get('allow', []) + $(printf '%s\n' "${colog_rules[@]}" | python3 -c "import sys,json; print(json.dumps([l.strip() for l in sys.stdin]))")
+
+with open('$settings_file', 'w') as f:
+    json.dump(data, f, indent=2)
+    f.write('\n')
+" 2>/dev/null && info "  ~ .claude/settings.json (added colog git permissions)" || \
+            warn "  ~ .claude/settings.json (exists, please add git permissions manually)"
+          else
+            warn "  ~ .claude/settings.json (exists, please add git permissions manually)"
+          fi
+        fi
+      else
+        # Create new settings file with git permissions
+        cat > "$settings_file" <<SETTINGS_JSON
+{
+  "permissions": {
+    "allow": [
+$(printf '      "%s"' "${colog_rules[0]}"
+for rule in "${colog_rules[@]:1}"; do
+  printf ',\n      "%s"' "$rule"
+done
+echo "")
+    ]
+  }
+}
+SETTINGS_JSON
+        info "  + .claude/settings.json (git permissions for colog)"
+      fi
+      ;;
+
+    codex)
+      # OpenAI Codex CLI: uses CODEX.md or codex.json for config
+      # Codex has a --full-auto flag but no per-command permission file yet
+      info "  (Codex: grant git permissions via --full-auto flag or approval prompts)"
+      ;;
+
+    cursor)
+      # Cursor: no per-command permission config, uses interactive approval
+      info "  (Cursor: git commands will be approved interactively)"
+      ;;
+
+    *)
+      # Other agents: no known permission config
+      info "  (Agent permissions: configure git access per your agent's documentation)"
+      ;;
+  esac
+}
+
 # ─── INIT ──────────────────────────────────────────────────────────────────
 
 install_file() {
@@ -275,6 +416,9 @@ GITIGNORE
     sed -n '/<!-- colog:start -->/,/<!-- colog:end -->/p' "$TEMPLATES_DIR/CLAUDE.md.template" >> "$target/CLAUDE.md"
     info "  ~ CLAUDE.md (appended colog section to existing file)"
   fi
+
+  # Configure agent permissions (allow git commands without prompts)
+  configure_agent_permissions "$target" "$agent"
 
   # Write config
   cat > "$target/.colog/config.yaml" <<YAML
