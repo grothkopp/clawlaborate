@@ -14,7 +14,7 @@ This prompt is also a template — users can customize it for their own schedule
 1. **Sync first** — Run `/colog:sync` to pull latest changes and sync tasks
 2. **Clean up tasks** — Remove completed tasks (`- [x]`) from `colog/tasks.md`.
    They are preserved in git history. Use `/colog:save` to commit the cleanup.
-3. **Get status** — Run `/colog:status yesterday` to collect the daily overview
+3. **Get status** — Run `/colog:status` to collect the daily overview (default = last 24h)
 4. **Format the briefing** — Structure the status output for the team:
 
 ```
