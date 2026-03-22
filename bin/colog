@@ -214,7 +214,7 @@ fs.writeFileSync(f, JSON.stringify(data, null, 2) + '\n');
               if [[ -n "$insert_lines" ]]; then
                 # Find the last entry in the allow array and append after it
                 # Strategy: replace the last line before ] in the allow block
-                sed -i -E '/^\s*"Bash\(/!b; :a; N; /\n\s*\]/!ba; s/("Bash\([^"]*\)")/\1'"$(echo -e "$insert_lines")"'/' "$settings_file" 2>/dev/null \
+                sed -i '' -E '/^\s*"Bash\(/!b; :a; N; /\n\s*\]/!ba; s/("Bash\([^"]*\)")/\1'"$(echo -e "$insert_lines")"'/' "$settings_file" 2>/dev/null \
                   && info "  ~ .claude/settings.json (added colog git permissions)" \
                   || warn "  ! .claude/settings.json (could not merge — add git permissions manually)"
               fi
