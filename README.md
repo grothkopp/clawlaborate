@@ -1,134 +1,74 @@
 # colog
 
-**Make collaboration part of your repo, not another tool.**
+**Let your AI agent handle collaboration.**
 
-colog adds structured collaboration to any project through your AI coding agent. Instead of switching between Slack, Jira, Notion, and your IDE, the agent tracks everything directly in git — decisions, tasks, changes, ideas — all as semantic commits.
+Decisions get made in chat. Tasks come up in conversation. Code changes happen all day. But updating Jira, writing meeting notes, keeping everyone in sync — that's the overhead nobody wants.
 
-Every team member keeps using their preferred tool. The AI agent handles the overhead.
-
-## The Idea
-
-Most collaboration overhead isn't the actual work — it's the meta-work: updating task boards, writing meeting notes, documenting decisions, keeping everyone informed.
-
-colog replaces all of that with one concept: **git as your project log**.
-
-Every project event — a decision made, a task created, an idea proposed, a file changed — becomes a semantic git commit. There is no separate log file. The git history IS the project log:
+colog lets your AI coding agent take care of it. As you work together, the agent tracks decisions, tasks, changes, and ideas — automatically, as semantic git commits. No context switching. No separate tools. Everything stays in your project.
 
 ```
-abc1234 decision(db): use PostgreSQL for user data @SG
-def5678 task(api): implement rate limiting @NR
-ghi9012 change(auth): add JWT token refresh endpoint @SG
-jkl3456 idea(ui): consider dark mode toggle @AP
+decision(db): use PostgreSQL for user data @SG
+task(api): implement rate limiting @NR
+change(auth): add JWT token refresh endpoint @SG
+idea(ui): consider dark mode toggle @AP
 ```
 
-Tasks and project memory are snapshots derived from git history:
+Works with Claude Code, Codex, Cursor, Gemini CLI, and [10+ more agents](#supported-agents).
 
-```
-colog/tasks.md       ← what's open, who owns it (with commit refs)
-colog/project.md     ← project description, team, schedule
-colog/me.md          ← who am I? (local, gitignored)
-colog/memory.md      ← optional: condensed project context
-```
-
-## Quick Start
-
-### 1. Install
+## Install
 
 ```bash
 git clone https://github.com/grothkopp/colog.git
 export PATH="$PATH:$(pwd)/colog/bin"
 ```
 
-### 2. Initialize your project
+## Setup
 
 ```bash
 cd my-project
-colog init .
-
-# For a different AI tool:
-colog --agent codex init .
-colog --agent cursor init .
+colog init .                    # default: Claude Code
+colog --agent codex init .      # or specify your agent
 ```
 
-This creates:
-- `colog/` with tasks, project, and memory files
-- Commands in your agent's directory (e.g., `.claude/commands/colog.*.md`)
-- `.colog/` with skills, prompts, templates, and config
-- `CLAUDE.md` with agent behavior instructions and configuration
-- `.claude/settings.json` with git permissions (for Claude Code)
-
-### 3. Set up your project
-
-Run the setup command inside your AI agent:
+Then run the setup wizard inside your agent:
 
 ```
 /colog:setup
 ```
 
-The agent will ask about:
-- **Project**: name, team members, technologies
-- **Paths**: where to store colog files (default: `colog/`)
-- **Identity**: how to determine the current user (me.md, git config, env var)
-- **Conversations**: how to access chat history for automatic event detection
+This configures your project name, team, and creates the initial files. You can also use `colog setup` from the CLI.
 
-Or use the CLI fallback: `colog setup`
+## Usage
 
-### 4. Schedule automation
-
-Configure these in your agent platform:
-
-- **Heartbeat** (every 30 min): Runs `/colog:sync --buffer 5m` to keep everything in sync
-- **Morning briefing** (daily 8:00): Runs `/colog:status` and sends a daily summary
-
-Prompt files are in `.colog/prompts/`.
-
-### 5. Work
-
-The agent logs proactively as you work — decisions, tasks, ideas all become commits automatically. You can also trigger commands manually:
+The agent logs proactively as you work — decisions, tasks, ideas all become commits without you asking. You can also use commands directly:
 
 ```
-/colog:log We decided to use TypeScript    # Log a decision
-/colog:save                                 # Commit current work
-/colog:sync                                 # Full sync cycle
-/colog:status                               # Project overview (last 24h)
+/colog:sync                                 # Sync everything (pull, commit, push)
+/colog:status                               # Open tasks + last 24h
 /colog:status open                          # Uncommitted changes
-/colog:status last week                     # Weekly review
-/colog:ask Who worked on auth last week?    # Query project history
+/colog:log We decided to use TypeScript      # Log something manually
+/colog:save                                 # Commit current file changes
+/colog:ask Who worked on auth last week?     # Query project history
 ```
+
+**`/colog:sync`** is the main workhorse — it pulls, detects events from conversations, commits file changes, syncs tasks bidirectionally, and pushes. All other write commands (`/colog:log`, `/colog:save`) are called internally by sync.
+
+**`/colog:status`** is read-only — open tasks, recent activity, clustered by topic. `status open` shows uncommitted work, `status last week` gives a sprint review.
+
+## Scheduling
+
+Set up two scheduled tasks in your agent platform and everything runs on autopilot:
+
+| Task | Schedule | What it does |
+|------|----------|-------------|
+| Heartbeat | Every 30 min | Runs `/colog:sync --buffer 5m` during working hours |
+| Morning briefing | Daily 8:00 | Runs `/colog:sync` + `/colog:status`, sends summary to the team |
+
+The `--buffer 5m` parameter ensures the heartbeat doesn't conflict with the agent's own real-time logging. Prompt templates are in `.colog/prompts/`.
 
 ## How It Works
 
-### Two main commands do the heavy lifting
-
-**`/colog:sync`** — the orchestrator
-1. Pull from remote
-2. Detect events from conversations → commit via `/colog:log`
-3. Save file changes → commit via `/colog:save`
-4. Two-way task sync (tasks.md ↔ git)
-5. Push to remote
-6. Notify team of changes
-
-**`/colog:status`** — the reader
-- Default (no args): open tasks + last 24h activity
-- `open`: uncommitted changes, unpushed commits
-- `last week`, date ranges: scoped activity view
-- Clusters related commits (e.g., "slides: 12 changes by @SG")
-
-### Schedule sync as a heartbeat → everything is automatic
-
-When `/colog:sync` runs on a schedule, the agent automatically picks up conversations, logs events, syncs tasks, and pushes — without anyone having to think about it. The `--buffer 5m` parameter prevents conflicts with real-time agent logging.
-
-### Agent logs proactively
-
-The CLAUDE.md instructs the agent to log without being asked:
-- Decisions made during conversation → `/colog:log`
-- Tasks that come up → `/colog:log`
-- Code changes completed → `/colog:save`
-- Larger work done → `/colog:sync`
-
-## Commit Format
-
-Every log entry is a git commit with a semantic message:
+Every project event becomes a semantic git commit:
 
 ```
 type(subject): short description @user
@@ -137,22 +77,15 @@ type(subject): short description @user
 | Type | Use for |
 |------|---------|
 | `change` | File created, modified, deleted, refactored |
-| `decision` | Direction chosen, convention agreed, scope changed |
-| `task` | Task created, completed, reassigned, blocked |
+| `decision` | Direction chosen, convention agreed |
+| `task` | Task created, completed, reassigned |
 | `idea` | Proposal, suggestion, something to explore |
-| `note` | Context, observation, meeting summary, question |
+| `note` | Context, observation, meeting summary |
 | `milestone` | Phase completed, goal reached, release |
 
-Commits use `--author="First Last <email>"` so git correctly attributes them to the person who initiated the action, even when the agent runs the command.
+Commits use `--author="First Last <email>"` so git attributes them to the right person, even when the agent runs the command. Events without file changes (decisions, ideas) use `git commit --allow-empty`.
 
-Events without file changes (questions, decisions, ideas) use empty commits:
-
-```bash
-git commit --allow-empty --author="Stefan Grothkopp <sg@example.com>" \
-  -m "decision(db): use PostgreSQL for user data @SG"
-```
-
-## Task Management
+### Tasks
 
 Tasks live in `colog/tasks.md` as a snapshot with commit references:
 
@@ -162,50 +95,17 @@ Tasks live in `colog/tasks.md` as a snapshot with commit references:
 - [x] Add JWT refresh (@SG, ghi9012)
 ```
 
-Tasks sync bidirectionally between `tasks.md` and git:
-- **Completions** in tasks.md → `task(subject): completed (closes ID)` commit
-- **New tasks** added manually → detected and committed automatically
-- **Task commits** without a tasks.md entry → added to tasks.md
+Tasks sync bidirectionally between `tasks.md` and git — completions, new tasks, and untracked commits are all handled automatically by `/colog:sync`. Dates are always due dates; created/completed timestamps live in git history.
 
-Dates in tasks are always due dates. Created/completed timestamps live in git history.
+## Customization
 
-## Commands, Skills, Prompts
+All configuration lives in `CLAUDE.md` (inside `<!-- colog:start -->` / `<!-- colog:end -->` markers). `/colog:setup` walks you through it.
 
-### Commands (user-invokable)
+**File paths** — By default, colog stores files in `colog/`. You can change this to any directory during setup.
 
-| Command | Description |
-|---------|-------------|
-| `/colog:setup` | One-time project setup wizard |
-| `/colog:log` | Log an event (creates a semantic commit) |
-| `/colog:save` | Save current work (stage + semantic commits) |
-| `/colog:sync` | Pull, sync tasks ↔ git, push (the orchestrator) |
-| `/colog:status` | Project overview (default: 24h; `open`, `last week`, date range) |
-| `/colog:ask` | Query project history — decisions, changes, who did what |
+**User identity** — How the agent determines who you are. Options: `me.md` file (default, local, gitignored), `git config user.name`, environment variable, or a platform-specific API.
 
-### Skills (agent rules — always active)
-
-| Skill | What it governs |
-|-------|----------------|
-| git | Semantic commit format, reading the log, common actions |
-| ask | Searching project history (git log, blame, pickaxe) |
-| task-management | Task list as snapshot with commit references, two-way sync |
-| memory | Optional project memory snapshot |
-| colog-sync | Syncing with the colog template repo |
-
-### Prompts (scheduled)
-
-| Prompt | Schedule | Description |
-|--------|----------|-------------|
-| heartbeat | Every 30 min | Runs `/colog:sync --buffer 5m` during working hours |
-| morning | Daily 8:00 | Runs sync + status, sends daily briefing to the team |
-
-## Configuration
-
-All configuration lives in the `CLAUDE.md` file (inside `<!-- colog:start -->` markers):
-
-- **Paths**: where tasks, project, identity, and memory files are stored
-- **Identity**: how to determine the current user (me.md, git config, env var, etc.)
-- **Conversation source**: how to access chat history for automatic event detection
+**Conversation source** — How the agent accesses recent conversations for automatic event detection. Options: chat database, log file, API, or none (manual logging only).
 
 All commands reference this central configuration — nothing is hardcoded.
 
@@ -213,26 +113,17 @@ All commands reference this central configuration — nothing is hardcoded.
 
 ```
 my-project/
-├── colog/                        # User-facing data
-│   ├── tasks.md                     #   Task snapshot (with commit refs)
-│   ├── project.md                   #   Project description + team
-│   ├── me.md                        #   Current user identity (local, gitignored)
-│   └── memory.md                    #   Optional memory snapshot
-├── .claude/commands/                # Commands (Claude Code example)
-│   ├── colog.setup.md
-│   ├── colog.log.md
-│   ├── colog.save.md
-│   ├── colog.sync.md
-│   ├── colog.status.md
-│   └── colog.ask.md
-├── .claude/settings.json            # Git permissions (auto-configured)
+├── colog/                        # Your data
+│   ├── tasks.md                     Task snapshot (with commit refs)
+│   ├── project.md                   Project description + team
+│   ├── me.md                        Your identity (local, gitignored)
+│   └── memory.md                    Optional project memory
+├── .claude/commands/colog.*.md   # Agent commands (Claude Code example)
 ├── .colog/                       # Infrastructure
-│   ├── skills/                      #   Agent rules (always active)
-│   ├── prompts/                     #   Scheduled behaviors
-│   ├── templates/                   #   Originals for update/sync
-│   └── config.yaml                  #   Configuration
-├── CLAUDE.md                        # Agent prompt + colog config
-└── .gitignore
+│   ├── skills/                      Agent rules (always active)
+│   ├── prompts/                     Scheduled behaviors (heartbeat, morning)
+│   └── config.yaml                  Internal config
+└── CLAUDE.md                     # Agent prompt + colog configuration
 ```
 
 ## Supported Agents
@@ -252,27 +143,19 @@ my-project/
 | Amp | `.agents/commands/` |
 | OpenClaw | `.colog/commands/` |
 
-For Claude Code, `colog init` automatically configures `.claude/settings.json` with permissions for all required git commands (merge into existing settings, never overwrite).
+For Claude Code, `colog init` automatically configures `.claude/settings.json` with git permissions.
 
-## CLI Commands
+## CLI Reference
 
 ```bash
 colog init [path]       # Initialize a new project
-colog setup             # CLI setup wizard (prefer /colog:setup)
-colog update            # Pull latest templates (removes obsolete files)
-colog sync              # Show diffs between project and templates
+colog setup             # CLI setup wizard (prefer /colog:setup in your agent)
+colog update            # Pull latest templates, remove obsolete files
+colog sync              # Show diffs between your files and templates
 colog version           # Show version
 ```
 
 **Options:** `--agent <type>` (default: claude), `--lang en|de`
-
-## Design Principles
-
-- **Git is the single source of truth.** No separate log file — the git history is the project log.
-- **Granular writes, aggregated reads.** Every event gets its own commit. Status commands cluster and summarize.
-- **No duplication.** Commands call each other: sync → log + save. Heartbeat → sync. Morning → sync + status.
-- **Configurable, not hardcoded.** Paths, identity, and conversation source are set once in CLAUDE.md and referenced everywhere.
-- **Non-destructive.** History is never squashed or rewritten. Init and update never overwrite existing files.
 
 ## License
 
